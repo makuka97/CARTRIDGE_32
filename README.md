@@ -1,42 +1,99 @@
-# CARTRIDGE32 — C++ Rewrite
+# CARTRIDGE32
 
-Retro game launcher for Windows XP and above.
-Built with: C++17 · Dear ImGui · SDL2 · OpenGL 3.0 · SQLite3
+A retro game launcher for Windows built in C++. Browse your ROM collection as a tile grid, scrape box art automatically, and launch games directly into their emulators.
 
-## Quick Start
+Runs on Windows XP and above.
 
-1. Clone this repo
-2. Follow `src/vendor/SETUP.md` to populate dependencies
-3. Build:
+---
+
+## Stack
+
+- C++17
+- Dear ImGui (docking branch)
+- SDL2 + OpenGL 3.0
+- SQLite3
+- WinINet (box art scraping)
+- WIC / Windows Imaging Component (texture loading)
+
+---
+
+## Building
+
+**Requirements**
+
+- CMake 3.16+
+- MinGW-w64 (via MSYS2 ucrt64 recommended)
+- SDL2 development libraries
+
+**Steps**
 
 ```bat
-cmake -B build -G "MinGW Makefiles" -DSDL2_DIR="C:/SDL2/cmake"
+cmake -B build -G "MinGW Makefiles" ^
+    -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe ^
+    -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe ^
+    -DSDL2_DIR="C:/msys64/ucrt64/lib/cmake/SDL2"
+
 cmake --build build --parallel
-build\bin\cartridge32.exe
 ```
 
-## Phase Roadmap
+Or just double-click `BUILD.bat` after setting your `SDL2_DIR` at the top of the file.
 
-| Phase | Status      | Description                                    |
-|-------|-------------|------------------------------------------------|
-| 1     | ✅ Done     | CMake scaffold · SDL2 + ImGui window · theme   |
-| 2     | 🔜 Next     | SQLite layer · models · Library screen tiles   |
-| 3     | ⏳ Planned  | ROM import · drag-drop · system detection      |
-| 4     | ⏳ Planned  | Emulator launcher · per-system subprocess      |
-| 5     | ⏳ Planned  | Box art scraper · background thread            |
-| 6     | ⏳ Planned  | DOS picker modal · DOSBox config generation    |
-| 7     | ⏳ Planned  | Search · select/delete · polish                |
+The emulator binaries are not included in this repo. Place them in `native/` next to the exe following the layout described in `ADDING_EMULATORS.md`.
+
+---
+
+## Features
+
+- Tile grid library with sidebar system filters and live search
+- ROM import via file dialog — system detected from file extension
+- MS-DOS games imported from zip, executable selected via picker modal, DOSBox conf generated automatically
+- Box art scraped from the Libretro CDN in background threads, cached locally
+- Select and delete multiple games at once
+- Detail modal with keyboard shortcuts: Enter to launch, Delete to remove, Escape to close
+
+---
 
 ## Supported Systems
 
-NES · Super Nintendo · Nintendo 64 · Game Boy / Color / Advance ·
-Sega Genesis · Sega Master System · Atari 2600 / 7800 · Atari Lynx ·
-TurboGrafx-16 · Commodore 64 · MS-DOS
+| System | Emulator |
+|--------|----------|
+| NES | Nestopia |
+| Super Nintendo | Snes9x |
+| Nintendo 64 | Mupen64Plus |
+| Nintendo DS | DeSmuME |
+| Game Boy / Color / Advance | mGBA |
+| PlayStation 1 | ePSXe |
+| Sega Genesis / Master System | Gens GS |
+| Atari 2600 / 7800 | Stella |
+| Lynx / TurboGrafx-16 / Game Gear / Neo Geo Pocket / WonderSwan / Virtual Boy | Mednafen |
+| Commodore 64 | VICE |
+| MS-DOS | DOSBox |
 
-## Controls
+See `ADDING_EMULATORS.md` for instructions on adding new systems.
 
-| Key     | Action                      |
-|---------|-----------------------------|
-| F1      | Toggle ImGui demo window    |
-| Ctrl+O  | Open ROM (Phase 3+)         |
-| Alt+F4  | Quit                        |
+---
+
+## Project Structure
+
+```
+src/
+  app.cpp / app.h          SDL2 + ImGui init, main loop
+  db.cpp / db.h            SQLite layer
+  importer.cpp / .h        ROM import, system detection, DOS zip handling
+  launcher.cpp / .h        Emulator subprocess spawning
+  scraper.cpp / .h         Box art background thread, Libretro CDN
+  texture_cache.cpp / .h   WIC PNG loader, OpenGL LRU texture cache
+  models.h                 Game struct, System enum
+  config.h                 Colors, tile sizes, system labels
+  screens/
+    library.cpp / .h       Full UI: sidebar, tile grid, modals
+  vendor/
+    imgui/                 Dear ImGui (docking branch)
+    sqlite3/               SQLite amalgamation
+```
+
+---
+
+## License
+
+MIT
