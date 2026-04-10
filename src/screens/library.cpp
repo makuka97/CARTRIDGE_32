@@ -6,7 +6,9 @@
 #include "../texture_cache.h"
 
 #include <imgui.h>
+#ifdef _WIN32
 #include <windows.h>
+#endif
 #include <SDL.h>
 #include <cstring>
 #include <cstdio>
@@ -463,9 +465,23 @@ void LibraryScreen::delete_selected() {
              (int)m_selected_ids.size(),
              m_selected_ids.size() == 1 ? "" : "s");
 
+#ifdef _WIN32
     int result = MessageBoxA(nullptr, msg, "Delete Games",
                               MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
     if (result != IDYES) return;
+#else
+    const SDL_MessageBoxButtonData buttons[] = {
+        { 0, 0, "Cancel" },
+        { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Delete" },
+    };
+    const SDL_MessageBoxData mbdata = {
+        SDL_MESSAGEBOX_WARNING, nullptr, "Delete Games", msg,
+        2, buttons, nullptr
+    };
+    int btn = 0;
+    SDL_ShowMessageBox(&mbdata, &btn);
+    if (btn != 1) return;
+#endif
 
     for (int64_t id : m_selected_ids)
         m_db.delete_game(id);
@@ -714,6 +730,7 @@ void LibraryScreen::draw_dos_picker_modal() {
 // ── File dialog & import ──────────────────────────────────────────────────────
 
 void LibraryScreen::open_file_dialog() {
+#ifdef _WIN32
     char filename[MAX_PATH] = {};
     OPENFILENAMEA ofn = {};
     ofn.lStructSize = sizeof(ofn);
@@ -729,6 +746,31 @@ void LibraryScreen::open_file_dialog() {
     ofn.Flags      = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
     if (!GetOpenFileNameA(&ofn)) return;
     try_import(std::string(filename));
+#else
+    // Linux: use zenity if available, fall back to kdialog
+    FILE* pipe = popen(
+        "zenity --file-selection --title='Open ROM' "
+        "--file-filter='ROM Files | *.nes *.smc *.sfc *.snes *.n64 *.z64 *.v64 "
+        "*.gb *.gbc *.gba *.md *.gen *.bin *.sms *.gg "
+        "*.a26 *.a78 *.lnx *.pce *.d64 *.t64 *.prg *.crt *.zip' "
+        "--file-filter='All Files | *' 2>/dev/null", "r");
+    if (!pipe) {
+        // Try kdialog
+        pipe = popen(
+            "kdialog --getopenfilename . "
+            "'ROM Files (*.nes *.smc *.sfc *.n64 *.z64 *.gb *.gbc *.gba "
+            "*.md *.gen *.sms *.gg *.a26 *.a78 *.lnx *.pce *.d64 *.zip)' 2>/dev/null", "r");
+    }
+    if (!pipe) return;
+    char buf[4096] = {};
+    fgets(buf, sizeof(buf), pipe);
+    pclose(pipe);
+    // Strip trailing newline
+    std::string path(buf);
+    while (!path.empty() && (path.back() == '\n' || path.back() == '\r'))
+        path.pop_back();
+    if (!path.empty()) try_import(path);
+#endif
 }
 
 void LibraryScreen::try_import(const std::string& path) {

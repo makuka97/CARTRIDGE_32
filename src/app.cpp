@@ -17,6 +17,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <shlobj.h>
+#else
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 // ── Data dir ──────────────────────────────────────────────────────────────────
@@ -29,17 +32,31 @@ static std::string get_data_dir() {
         CreateDirectoryA(d.c_str(), nullptr);
         return d;
     }
-    // Fallback: store next to the exe
     CreateDirectoryA(".\\data", nullptr);
     return ".\\data\\";
 #else
-    return "./data/";
+    const char* xdg = getenv("XDG_CONFIG_HOME");
+    std::string base = xdg ? xdg : (std::string(getenv("HOME") ? getenv("HOME") : ".") + "/.config");
+    std::string d = base + "/cartridge32/";
+    // mkdir -p equivalent
+    for (size_t i = 1; i <= d.size(); i++) {
+        if (i == d.size() || d[i] == '/') {
+            mkdir(d.substr(0, i).c_str(), 0755);
+        }
+    }
+    return d;
 #endif
 }
 
 static void ensure_dir(const std::string& path) {
 #ifdef _WIN32
     CreateDirectoryA(path.c_str(), nullptr);
+#else
+    for (size_t i = 1; i <= path.size(); i++) {
+        if (i == path.size() || path[i] == '/') {
+            mkdir(path.substr(0, i).c_str(), 0755);
+        }
+    }
 #endif
 }
 
@@ -112,9 +129,6 @@ bool App::init(const char* title, int w, int h) {
     ensure_dir(data_dir);
     std::string db_path = data_dir + "cartridge32.db";
 
-    // Phase 3: wipe any stale seed DB from phase 2 testing.
-    // This block runs once and is safe to remove after first clean run.
-    DeleteFileA(db_path.c_str());
 
     if (!m_db.init(db_path)) {
         SDL_Log("Database init failed");

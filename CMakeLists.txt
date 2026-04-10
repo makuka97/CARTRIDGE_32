@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(cartridge32 VERSION 0.4.0 LANGUAGES C CXX)
+project(cartridge32 VERSION 0.5.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,7 +12,27 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # ── SDL2 ──────────────────────────────────────────────────────────────────────
-find_package(SDL2 REQUIRED)
+if(WIN32)
+    find_package(SDL2 REQUIRED)
+else()
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(SDL2 REQUIRED sdl2)
+        # Create imported target to match Windows interface
+        if(NOT TARGET SDL2::SDL2)
+            add_library(SDL2::SDL2 INTERFACE IMPORTED)
+            set_target_properties(SDL2::SDL2 PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${SDL2_INCLUDE_DIRS}"
+                INTERFACE_LINK_LIBRARIES "${SDL2_LIBRARIES}"
+                INTERFACE_COMPILE_OPTIONS "${SDL2_CFLAGS_OTHER}")
+        endif()
+        if(NOT TARGET SDL2::SDL2main)
+            add_library(SDL2::SDL2main INTERFACE IMPORTED)
+        endif()
+    else()
+        find_package(SDL2 REQUIRED)
+    endif()
+endif()
 
 # ── OpenGL ────────────────────────────────────────────────────────────────────
 find_package(OpenGL REQUIRED)
@@ -73,7 +93,16 @@ target_link_libraries(cartridge32 PRIVATE
 )
 
 if(WIN32)
-    target_link_libraries(cartridge32 PRIVATE winmm imm32 version setupapi shlwapi shell32 comdlg32 wininet windowscodecs ole32)
+    target_link_libraries(cartridge32 PRIVATE
+        winmm imm32 version setupapi shlwapi shell32 comdlg32 wininet windowscodecs ole32)
+else()
+    # Linux dependencies
+    find_package(CURL REQUIRED)
+    find_package(PNG REQUIRED)
+    target_link_libraries(cartridge32 PRIVATE
+        CURL::libcurl
+        PNG::PNG
+        pthread)
 endif()
 
 if(MSVC)

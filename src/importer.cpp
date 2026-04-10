@@ -1,5 +1,10 @@
 #include "importer.h"
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -228,37 +233,37 @@ std::vector<std::string> list_dos_executables(const std::string& zip_path) {
 static void mkdir_recursive(const std::string& path) {
     for (size_t i = 1; i <= path.size(); i++) {
         if (i == path.size() || path[i] == '\\' || path[i] == '/') {
+#ifdef _WIN32
             CreateDirectoryA(path.substr(0, i).c_str(), nullptr);
+#else
+            mkdir(path.substr(0, i).c_str(), 0755);
+#endif
         }
     }
 }
 
-// Extract a zip file to out_dir using PowerShell Expand-Archive (Win10+).
-// Waits synchronously up to 30 seconds.
+// Extract a zip file to out_dir.
 static bool extract_zip(const std::string& zip_path, const std::string& out_dir) {
     mkdir_recursive(out_dir);
-
-    // PowerShell Expand-Archive — silently overwrite, no window.
+#ifdef _WIN32
     std::string cmd =
         "powershell -NoProfile -NonInteractive -Command \""
         "Expand-Archive -LiteralPath '" + zip_path + "' "
         "-DestinationPath '" + out_dir + "' -Force\"";
-
     STARTUPINFOA si = {}; si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
+    si.dwFlags = STARTF_USESHOWWINDOW; si.wShowWindow = SW_HIDE;
     PROCESS_INFORMATION pi = {};
-    std::vector<char> cb(cmd.begin(), cmd.end());
-    cb.push_back('\0');
-
+    std::vector<char> cb(cmd.begin(), cmd.end()); cb.push_back('\0');
     if (!CreateProcessA(nullptr, cb.data(), nullptr, nullptr,
-                        FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+                        FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
         return false;
-    }
     WaitForSingleObject(pi.hProcess, 30000);
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess); CloseHandle(pi.hThread);
     return true;
+#else
+    std::string cmd = "unzip -o '" + zip_path + "' -d '" + out_dir + "' > /dev/null 2>&1";
+    return system(cmd.c_str()) == 0;
+#endif
 }
 
 // Write a DOSBox .conf that mounts game_dir as C: and launches dos_exe.
@@ -348,9 +353,18 @@ ImportResult import_dos(const std::string& zip_path, const std::string& exe_insi
     }
 
     // Extract only if the directory doesn't already exist
+#ifdef _WIN32
+#ifdef _WIN32
     DWORD attr = GetFileAttributesA(game_dir.c_str());
     bool already_done = (attr != INVALID_FILE_ATTRIBUTES &&
                          (attr & FILE_ATTRIBUTE_DIRECTORY));
+#else
+    struct stat _dst; bool already_done = (stat(game_dir.c_str(), &_dst) == 0 && S_ISDIR(_dst.st_mode));
+#endif
+#else
+    struct stat _st;
+    bool already_done = (stat(game_dir.c_str(), &_st) == 0 && S_ISDIR(_st.st_mode));
+#endif
     if (!already_done) {
         if (!extract_zip(zip_path, game_dir)) {
             r.error = "Extraction failed. Ensure PowerShell is available (Windows 10+).";
