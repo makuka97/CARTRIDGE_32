@@ -1,4 +1,4 @@
-# CARTRIDGE32
+CARTRIDGE32
 
 A retro game launcher for Windows built in C++. Browse your ROM collection as a tile grid, scrape box art automatically, and launch games directly into their emulators.
 
@@ -6,7 +6,7 @@ Runs on Windows XP and above.
 
 ---
 
-## Stack
+ Stack
 
 - C++17
 - Dear ImGui (docking branch)
@@ -16,8 +16,7 @@ Runs on Windows XP and above.
 - WIC / Windows Imaging Component (texture loading)
 
 ---
-
-## Building
+Building
 
 **Requirements**
 
@@ -42,7 +41,7 @@ The emulator binaries are not included in this repo. Place them in `native/` nex
 
 ---
 
-## Features
+ Features
 
 - Tile grid library with sidebar system filters and live search
 - ROM import via file dialog — system detected from file extension
@@ -53,7 +52,7 @@ The emulator binaries are not included in this repo. Place them in `native/` nex
 
 ---
 
-## Supported Systems
+ Supported Systems
 
 | System | Emulator |
 |--------|----------|
@@ -73,7 +72,7 @@ See `ADDING_EMULATORS.md` for instructions on adding new systems.
 
 ---
 
-## Project Structure
+ Project Structure
 
 ```
 src/
@@ -94,6 +93,6 @@ src/
 
 ---
 
-## License
+ License
 
 MIT
