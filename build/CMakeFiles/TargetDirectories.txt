@@ -1,0 +1,5 @@
+C:/cartridge/cartridge_native/cartridge32_phase4 (4)/cartridge32_phase4_work/build/CMakeFiles/sqlite3.dir
+C:/cartridge/cartridge_native/cartridge32_phase4 (4)/cartridge32_phase4_work/build/CMakeFiles/imgui.dir
+C:/cartridge/cartridge_native/cartridge32_phase4 (4)/cartridge32_phase4_work/build/CMakeFiles/cartridge32.dir
+C:/cartridge/cartridge_native/cartridge32_phase4 (4)/cartridge32_phase4_work/build/CMakeFiles/edit_cache.dir
+C:/cartridge/cartridge_native/cartridge32_phase4 (4)/cartridge32_phase4_work/build/CMakeFiles/rebuild_cache.dir

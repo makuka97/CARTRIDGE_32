@@ -1,0 +1,8 @@
+Saving	config file	C:\cartridge\cartridge_native\cartridge32_phase4 (4)\cartridge32_phase4_work\build\bin\native\snes9x\snes9x.conf
+No ROM file header found.
+Map_HiROMMap
+"DONKEY KONG COUNTRY" (NTSC) version 1.2
+ROM+RAM+BAT: HiROM: 32 Mbit, SRAM: 16 Kbit
+ID: 8X  , CRC32: 762af827, Checksum OK
+Saving	config file	C:\cartridge\cartridge_native\cartridge32_phase4 (4)\cartridge32_phase4_work\build\bin\native\snes9x\snes9x.conf
+Saving	config file	C:\cartridge\cartridge_native\cartridge32_phase4 (4)\cartridge32_phase4_work\build\bin\native\snes9x\snes9x.conf

@@ -1,0 +1,3 @@
+stb_image.h is required starting Phase 4 (box art loading).
+Download from: https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
+Place as: src/vendor/stb_image.h
