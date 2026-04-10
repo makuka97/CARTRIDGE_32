@@ -1,1 +1,0 @@
- libimgui.a libsqlite3.a C:/msys64/ucrt64/lib/libSDL2main.a C:/msys64/ucrt64/lib/libSDL2.dll.a -lopengl32 -lwinmm -limm32 -lversion -lsetupapi -lshlwapi -lshell32 -lcomdlg32 -lwininet -lwindowscodecs -lole32 -Wl,--undefined=WinMain -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 
